@@ -1,0 +1,957 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>http: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/ThanhPhucHuynh/http/backoff.go (100.0%)</option>
+				
+				<option value="file1">github.com/ThanhPhucHuynh/http/httpclient/client.go (100.0%)</option>
+				
+				<option value="file2">github.com/ThanhPhucHuynh/http/httpclient/options.go (100.0%)</option>
+				
+				<option value="file3">github.com/ThanhPhucHuynh/http/httpclient/plugin_mock.go (100.0%)</option>
+				
+				<option value="file4">github.com/ThanhPhucHuynh/http/hystrix/hystrix_client.go (100.0%)</option>
+				
+				<option value="file5">github.com/ThanhPhucHuynh/http/hystrix/options.go (100.0%)</option>
+				
+				<option value="file6">github.com/ThanhPhucHuynh/http/plugins/request_logger.go (100.0%)</option>
+				
+				<option value="file7">github.com/ThanhPhucHuynh/http/retry.go (100.0%)</option>
+				
+				<option value="file8">github.com/ThanhPhucHuynh/http/utils.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package http
+
+import (
+        "math"
+        "math/rand"
+        "time"
+)
+
+// Backoff interface defines contract for backoff strategies
+type Backoff interface {
+        Next(retry int) time.Duration
+}
+
+type constantBackoff struct {
+        backoffInterval       int64
+        maximumJitterInterval int64
+}
+
+func init() <span class="cov8" title="1">{
+        rand.Seed(time.Now().UnixNano())
+}</span>
+
+// NewConstantBackoff returns an instance of ConstantBackoff
+func NewConstantBackoff(backoffInterval, maximumJitterInterval time.Duration) Backoff <span class="cov8" title="1">{
+        // protect against panic when generating random jitter
+        if maximumJitterInterval &lt; 0 </span><span class="cov8" title="1">{
+                maximumJitterInterval = 0
+        }</span>
+
+        <span class="cov8" title="1">return &amp;constantBackoff{
+                backoffInterval:       int64(backoffInterval / time.Millisecond),
+                maximumJitterInterval: int64(maximumJitterInterval / time.Millisecond),
+        }</span>
+}
+
+// Next returns next time for retrying operation with constant strategy
+func (cb *constantBackoff) Next(retry int) time.Duration <span class="cov8" title="1">{
+        return (time.Duration(cb.backoffInterval) * time.Millisecond) + (time.Duration(rand.Int63n(cb.maximumJitterInterval+1)) * time.Millisecond)
+}</span>
+
+type exponentialBackoff struct {
+        exponentFactor        float64
+        initialTimeout        float64
+        maxTimeout            float64
+        maximumJitterInterval int64
+}
+
+// NewExponentialBackoff returns an instance of ExponentialBackoff
+func NewExponentialBackoff(initialTimeout, maxTimeout time.Duration, exponentFactor float64, maximumJitterInterval time.Duration) Backoff <span class="cov8" title="1">{
+        // protect against panic when generating random jitter
+        if maximumJitterInterval &lt; 0 </span><span class="cov8" title="1">{
+                maximumJitterInterval = 0
+        }</span>
+
+        <span class="cov8" title="1">return &amp;exponentialBackoff{
+                exponentFactor:        exponentFactor,
+                initialTimeout:        float64(initialTimeout / time.Millisecond),
+                maxTimeout:            float64(maxTimeout / time.Millisecond),
+                maximumJitterInterval: int64(maximumJitterInterval / time.Millisecond),
+        }</span>
+}
+
+// Next returns next time for retrying operation with exponential strategy
+func (eb *exponentialBackoff) Next(retry int) time.Duration <span class="cov8" title="1">{
+        if retry &lt; 0 </span><span class="cov8" title="1">{
+                retry = 0
+        }</span>
+        <span class="cov8" title="1">return time.Duration(math.Min(eb.initialTimeout*math.Pow(eb.exponentFactor, float64(retry)), eb.maxTimeout)+float64(rand.Int63n(eb.maximumJitterInterval+1))) * time.Millisecond</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package httpclient
+
+import (
+        "bytes"
+        "io"
+        "net/http"
+        "time"
+
+        avhttp "github.com/ThanhPhucHuynh/http"
+        "github.com/gojek/valkyrie"
+        "github.com/pkg/errors"
+)
+
+// Client is the http client implementation
+type Client struct {
+        client avhttp.Doer
+
+        timeout    time.Duration
+        retryCount int
+        retrier    avhttp.Retriable
+        plugins    []avhttp.Plugin
+}
+
+const (
+        defaultRetryCount  = 0
+        defaultHTTPTimeout = 30 * time.Second
+)
+
+var _ avhttp.Client = (*Client)(nil)
+
+// NewClient returns a new instance of http Client
+func NewClient(opts ...Option) *Client <span class="cov8" title="1">{
+        client := Client{
+                timeout:    defaultHTTPTimeout,
+                retryCount: defaultRetryCount,
+                retrier:    avhttp.NewNoRetrier(),
+        }
+
+        for _, opt := range opts </span><span class="cov8" title="1">{
+                opt(&amp;client)
+        }</span>
+
+        <span class="cov8" title="1">if client.client == nil </span><span class="cov8" title="1">{
+                client.client = &amp;http.Client{
+                        Timeout: client.timeout,
+                }
+        }</span>
+
+        <span class="cov8" title="1">return &amp;client</span>
+}
+
+var defaultHeaders = http.Header{
+        "Content-Type":    []string{"application/json"},
+        "Accept-Language": []string{"en"},
+}
+
+func header(inputHeaders http.Header) http.Header <span class="cov8" title="1">{
+        h := http.Header{}
+        for key, values := range defaultHeaders </span><span class="cov8" title="1">{
+                h[key] = values
+        }</span>
+        <span class="cov8" title="1">for key, values := range inputHeaders </span><span class="cov8" title="1">{
+                h[key] = values
+        }</span>
+        <span class="cov8" title="1">return h</span>
+}
+
+// AddPlugin Adds plugin to client
+func (c *Client) AddPlugin(p avhttp.Plugin) <span class="cov8" title="1">{
+        c.plugins = append(c.plugins, p)
+}</span>
+
+// Get makes a HTTP GET request to provided URL
+func (c *Client) Get(url string, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodGet, url, nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "GET - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return c.Do(request)</span>
+}
+
+// Post makes a HTTP POST request to provided URL and requestBody
+func (c *Client) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodPost, url, body)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "POST - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return c.Do(request)</span>
+}
+
+// Put makes a HTTP PUT request to provided URL and requestBody
+func (c *Client) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodPut, url, body)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "PUT - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return c.Do(request)</span>
+}
+
+// Patch makes a HTTP PATCH request to provided URL and requestBody
+func (c *Client) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodPatch, url, body)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "PATCH - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return c.Do(request)</span>
+}
+
+// Delete makes a HTTP DELETE request with provided URL
+func (c *Client) Delete(url string, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodDelete, url, nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "DELETE - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return c.Do(request)</span>
+}
+
+// Do makes an HTTP request with the native `http.Do` interface
+func (c *Client) Do(request *http.Request) (*http.Response, error) <span class="cov8" title="1">{
+        request.Close = true
+
+        var bodyReader *bytes.Reader
+
+        if request.Body != nil </span><span class="cov8" title="1">{
+                reqData, err := io.ReadAll(request.Body)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">bodyReader = bytes.NewReader(reqData)
+                request.Body = io.NopCloser(bodyReader)</span>
+        }
+
+        <span class="cov8" title="1">multiErr := &amp;valkyrie.MultiError{}
+        var response *http.Response
+
+        for i := 0; i &lt;= c.retryCount; i++ </span><span class="cov8" title="1">{
+                if response != nil </span><span class="cov8" title="1">{
+                        response.Body.Close()
+                }</span>
+
+                <span class="cov8" title="1">c.reportRequestStart(request)
+                var err error
+                response, err = c.client.Do(request)
+                if bodyReader != nil </span><span class="cov8" title="1">{
+                        // Reset the body reader after the request since at this point it's already read
+                        // Note that it's safe to ignore the error here since the 0,0 position is always valid
+                        _, _ = bodyReader.Seek(0, 0)
+                }</span>
+
+                <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                        multiErr.Push(err.Error())
+                        c.reportError(request, err)
+                        backoffTime := c.retrier.NextInterval(i)
+                        time.Sleep(backoffTime)
+                        continue</span>
+                }
+                <span class="cov8" title="1">c.reportRequestEnd(request, response)
+
+                if response.StatusCode &gt;= http.StatusInternalServerError </span><span class="cov8" title="1">{
+                        backoffTime := c.retrier.NextInterval(i)
+                        time.Sleep(backoffTime)
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">multiErr = &amp;valkyrie.MultiError{} // Clear errors if any iteration succeeds
+                break</span>
+        }
+
+        <span class="cov8" title="1">return response, multiErr.HasError()</span>
+}
+
+func (c *Client) reportRequestStart(request *http.Request) <span class="cov8" title="1">{
+        for _, plugin := range c.plugins </span><span class="cov8" title="1">{
+                plugin.OnRequestStart(request)
+        }</span>
+}
+
+func (c *Client) reportError(request *http.Request, err error) <span class="cov8" title="1">{
+        for _, plugin := range c.plugins </span><span class="cov8" title="1">{
+                plugin.OnError(request, err)
+        }</span>
+}
+
+func (c *Client) reportRequestEnd(request *http.Request, response *http.Response) <span class="cov8" title="1">{
+        for _, plugin := range c.plugins </span><span class="cov8" title="1">{
+                plugin.OnRequestEnd(request, response)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package httpclient
+
+import (
+        "time"
+
+        avhttp "github.com/ThanhPhucHuynh/http"
+)
+
+// Option represents the client options
+type Option func(*Client)
+
+// WithHTTPTimeout sets hystrix timeout
+func WithHTTPTimeout(timeout time.Duration) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.timeout = timeout
+        }</span>
+}
+
+// WithRetryCount sets the retry count for the hystrixHTTPClient
+func WithRetryCount(retryCount int) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.retryCount = retryCount
+        }</span>
+}
+
+// WithRetrier sets the strategy for retrying
+func WithRetrier(retrier avhttp.Retriable) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.retrier = retrier
+        }</span>
+}
+
+// WithHTTPClient sets a custom http client
+func WithHTTPClient(client avhttp.Doer) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.client = client
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package httpclient
+
+import (
+        "net/http"
+
+        "github.com/stretchr/testify/mock"
+)
+
+// MockPlugin provides a mock plugin for heimdall
+type MockPlugin struct {
+        mock.Mock
+}
+
+// OnRequestStart is called when the request starts
+func (m *MockPlugin) OnRequestStart(req *http.Request) <span class="cov8" title="1">{
+        m.Called(req)
+}</span>
+
+// OnRequestEnd is called when the request ends
+func (m *MockPlugin) OnRequestEnd(req *http.Request, res *http.Response) <span class="cov8" title="1">{
+        m.Called(req, res)
+}</span>
+
+// OnError is called when the request errors out
+func (m *MockPlugin) OnError(req *http.Request, err error) <span class="cov8" title="1">{
+        m.Called(req, err)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package hystrix
+
+import (
+        "bytes"
+        "io"
+        "net/http"
+        "time"
+
+        avhttp "github.com/ThanhPhucHuynh/http"
+        "github.com/ThanhPhucHuynh/http/httpclient"
+
+        "github.com/afex/hystrix-go/hystrix"
+        metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"
+        "github.com/afex/hystrix-go/plugins"
+        "github.com/pkg/errors"
+)
+
+type fallbackFunc func(error) error
+
+var initializeStatsdCollector = plugins.InitializeStatsdCollector
+
+// Client is the hystrix client implementation
+type Client struct {
+        client *httpclient.Client
+
+        timeout                time.Duration
+        hystrixTimeout         time.Duration
+        hystrixCommandName     string
+        maxConcurrentRequests  int
+        requestVolumeThreshold int
+        sleepWindow            int
+        errorPercentThreshold  int
+        retryCount             int
+        retrier                avhttp.Retriable
+        fallbackFunc           func(err error) error
+        statsD                 *plugins.StatsdCollectorConfig
+}
+
+const (
+        defaultHystrixRetryCount      = 0
+        defaultHTTPTimeout            = 30 * time.Second
+        defaultHystrixTimeout         = 30 * time.Second
+        defaultMaxConcurrentRequests  = 100
+        defaultErrorPercentThreshold  = 25
+        defaultSleepWindow            = 10
+        defaultRequestVolumeThreshold = 10
+
+        maxUint = ^uint(0)
+        maxInt  = int(maxUint &gt;&gt; 1)
+)
+
+var _ avhttp.Client = (*Client)(nil)
+var err5xx = errors.New("server returned 5xx status code")
+
+var defaultHeaders = http.Header{
+        "Content-Type":    []string{"application/json"},
+        "Accept-Language": []string{"en"},
+}
+
+func header(inputHeaders http.Header) http.Header <span class="cov8" title="1">{
+        h := http.Header{}
+        for key, values := range defaultHeaders </span><span class="cov8" title="1">{
+                h[key] = values
+        }</span>
+        <span class="cov8" title="1">for key, values := range inputHeaders </span><span class="cov8" title="1">{
+                h[key] = values
+        }</span>
+        <span class="cov8" title="1">return h</span>
+}
+
+// NewClient returns a new instance of hystrix Client
+func NewClient(opts ...Option) *Client <span class="cov8" title="1">{
+        client := Client{
+                client:                 httpclient.NewClient(),
+                timeout:                defaultHTTPTimeout,
+                hystrixTimeout:         defaultHystrixTimeout,
+                maxConcurrentRequests:  defaultMaxConcurrentRequests,
+                errorPercentThreshold:  defaultErrorPercentThreshold,
+                sleepWindow:            defaultSleepWindow,
+                requestVolumeThreshold: defaultRequestVolumeThreshold,
+                retryCount:             defaultHystrixRetryCount,
+                retrier:                avhttp.NewNoRetrier(),
+        }
+
+        for _, opt := range opts </span><span class="cov8" title="1">{
+                opt(&amp;client)
+        }</span>
+
+        <span class="cov8" title="1">if client.statsD != nil </span><span class="cov8" title="1">{
+                c, err := initializeStatsdCollector(client.statsD)
+                if err != nil </span><span class="cov8" title="1">{
+                        panic(err)</span>
+                }
+
+                <span class="cov8" title="1">metricCollector.Registry.Register(c.NewStatsdCollector)</span>
+        }
+
+        <span class="cov8" title="1">hystrix.ConfigureCommand(client.hystrixCommandName, hystrix.CommandConfig{
+                Timeout:                durationToInt(client.hystrixTimeout, time.Millisecond),
+                MaxConcurrentRequests:  client.maxConcurrentRequests,
+                RequestVolumeThreshold: client.requestVolumeThreshold,
+                SleepWindow:            client.sleepWindow,
+                ErrorPercentThreshold:  client.errorPercentThreshold,
+        })
+
+        return &amp;client</span>
+}
+
+func durationToInt(duration, unit time.Duration) int <span class="cov8" title="1">{
+        durationAsNumber := duration / unit
+
+        if int64(durationAsNumber) &gt;= int64(maxInt) </span><span class="cov8" title="1">{
+                return maxInt
+        }</span>
+        <span class="cov8" title="1">return int(durationAsNumber)</span>
+}
+
+// Get makes a HTTP GET request to provided URL
+func (hhc *Client) Get(url string, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodGet, url, nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "GET - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return hhc.Do(request)</span>
+}
+
+// Post makes a HTTP POST request to provided URL and requestBody
+func (hhc *Client) Post(url string, body io.Reader, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodPost, url, body)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "POST - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return hhc.Do(request)</span>
+}
+
+// Put makes a HTTP PUT request to provided URL and requestBody
+func (hhc *Client) Put(url string, body io.Reader, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodPut, url, body)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "PUT - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return hhc.Do(request)</span>
+}
+
+// Patch makes a HTTP PATCH request to provided URL and requestBody
+func (hhc *Client) Patch(url string, body io.Reader, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodPatch, url, body)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "PATCH - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return hhc.Do(request)</span>
+}
+
+// Delete makes a HTTP DELETE request with provided URL
+func (hhc *Client) Delete(url string, headers http.Header) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        request, err := http.NewRequest(http.MethodDelete, url, nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return response, errors.Wrap(err, "DELETE - request creation failed")
+        }</span>
+
+        <span class="cov8" title="1">request.Header = header(headers)
+
+        return hhc.Do(request)</span>
+}
+
+// Do makes an HTTP request with the native `http.Do` interface
+func (hhc *Client) Do(request *http.Request) (*http.Response, error) <span class="cov8" title="1">{
+        var response *http.Response
+        var err error
+
+        var bodyReader *bytes.Reader
+
+        if request.Body != nil </span><span class="cov8" title="1">{
+                reqData, err := io.ReadAll(request.Body)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">bodyReader = bytes.NewReader(reqData)
+                request.Body = io.NopCloser(bodyReader)</span> // prevents closing the body between retries
+        }
+
+        <span class="cov8" title="1">for i := 0; i &lt;= hhc.retryCount; i++ </span><span class="cov8" title="1">{
+                if response != nil </span><span class="cov8" title="1">{
+                        response.Body.Close()
+                }</span>
+
+                <span class="cov8" title="1">err = hystrix.Do(hhc.hystrixCommandName, func() error </span><span class="cov8" title="1">{
+                        response, err = hhc.client.Do(request)
+                        if bodyReader != nil </span><span class="cov8" title="1">{
+                                // Reset the body reader after the request since at this point it's already read
+                                // Note that it's safe to ignore the error here since the 0,0 position is always valid
+                                _, _ = bodyReader.Seek(0, 0)
+                        }</span>
+
+                        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                                return err
+                        }</span>
+
+                        <span class="cov8" title="1">if response.StatusCode &gt;= http.StatusInternalServerError </span><span class="cov8" title="1">{
+                                return err5xx
+                        }</span>
+                        <span class="cov8" title="1">return nil</span>
+                }, hhc.fallbackFunc)
+
+                <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                        backoffTime := hhc.retrier.NextInterval(i)
+                        time.Sleep(backoffTime)
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">break</span>
+        }
+
+        <span class="cov8" title="1">if err == err5xx </span><span class="cov8" title="1">{
+                return response, nil
+        }</span>
+
+        <span class="cov8" title="1">return response, err</span>
+}
+
+// AddPlugin Adds plugin to client
+func (hhc *Client) AddPlugin(p avhttp.Plugin) <span class="cov8" title="1">{
+        hhc.client.AddPlugin(p)
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package hystrix
+
+import (
+        "time"
+
+        avhttp "github.com/ThanhPhucHuynh/http"
+        "github.com/ThanhPhucHuynh/http/httpclient"
+        "github.com/afex/hystrix-go/plugins"
+)
+
+// Option represents the hystrix client options
+type Option func(*Client)
+
+// WithCommandName sets the hystrix command name
+func WithCommandName(name string) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.hystrixCommandName = name
+        }</span>
+}
+
+// WithHTTPTimeout sets hystrix timeout
+func WithHTTPTimeout(timeout time.Duration) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.timeout = timeout
+        }</span>
+}
+
+// WithHystrixTimeout sets hystrix timeout
+func WithHystrixTimeout(timeout time.Duration) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.hystrixTimeout = timeout
+        }</span>
+}
+
+// WithMaxConcurrentRequests sets hystrix max concurrent requests
+func WithMaxConcurrentRequests(maxConcurrentRequests int) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.maxConcurrentRequests = maxConcurrentRequests
+        }</span>
+}
+
+// WithRequestVolumeThreshold sets hystrix request volume threshold
+func WithRequestVolumeThreshold(requestVolumeThreshold int) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.requestVolumeThreshold = requestVolumeThreshold
+        }</span>
+}
+
+// WithSleepWindow sets hystrix sleep window
+func WithSleepWindow(sleepWindow int) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.sleepWindow = sleepWindow
+        }</span>
+}
+
+// WithErrorPercentThreshold sets hystrix error percent threshold
+func WithErrorPercentThreshold(errorPercentThreshold int) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.errorPercentThreshold = errorPercentThreshold
+        }</span>
+}
+
+// WithFallbackFunc sets the fallback function
+func WithFallbackFunc(fn fallbackFunc) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.fallbackFunc = fn
+        }</span>
+}
+
+// WithRetryCount sets the retry count for the Client
+func WithRetryCount(retryCount int) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.retryCount = retryCount
+        }</span>
+}
+
+// WithRetrier sets the strategy for retrying
+func WithRetrier(retrier avhttp.Retriable) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.retrier = retrier
+        }</span>
+}
+
+// WithHTTPClient sets a custom http client for hystrix client
+func WithHTTPClient(client avhttp.Doer) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                opt := httpclient.WithHTTPClient(client)
+                opt(c.client)
+        }</span>
+}
+
+// WithStatsDCollector exports hystrix metrics to a statsD backend
+func WithStatsDCollector(addr, prefix string) Option <span class="cov8" title="1">{
+        return func(c *Client) </span><span class="cov8" title="1">{
+                c.statsD = &amp;plugins.StatsdCollectorConfig{StatsdAddr: addr, Prefix: prefix}
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package plugins
+
+import (
+        "context"
+        "fmt"
+        "io"
+        "net/http"
+        "os"
+        "time"
+
+        avhttp "github.com/ThanhPhucHuynh/http"
+)
+
+type ctxKey string
+
+const reqTime ctxKey = "request_time_start"
+
+type requestLogger struct {
+        out    io.Writer
+        errOut io.Writer
+}
+
+// NewRequestLogger returns a new instance of a Heimdall request logger plugin
+// out and errOut are the streams where standard and error logs are written respectively
+// If given as nil, `out` takes the default value of `os.StdOut`
+// and errOut takes the default value of `os.StdErr`
+func NewRequestLogger(out io.Writer, errOut io.Writer) avhttp.Plugin <span class="cov8" title="1">{
+        if out == nil </span><span class="cov8" title="1">{
+                out = os.Stdout
+        }</span>
+        <span class="cov8" title="1">if errOut == nil </span><span class="cov8" title="1">{
+                errOut = os.Stderr
+        }</span>
+        <span class="cov8" title="1">return &amp;requestLogger{
+                out:    out,
+                errOut: errOut,
+        }</span>
+}
+
+func (rl *requestLogger) OnRequestStart(req *http.Request) <span class="cov8" title="1">{
+        ctx := context.WithValue(req.Context(), reqTime, time.Now())
+        *req = *(req.WithContext(ctx))
+}</span>
+
+func (rl *requestLogger) OnRequestEnd(req *http.Request, res *http.Response) <span class="cov8" title="1">{
+        requestDuration := getRequestDuration(req.Context()) / time.Millisecond
+        method := req.Method
+        url := req.URL.String()
+        statusCode := res.StatusCode
+        fmt.Fprintf(rl.out, "%s %s %s %d [%dms]\n", time.Now().Format("02/Jan/2006 03:04:05"), method, url, statusCode, requestDuration)
+}</span>
+
+func (rl *requestLogger) OnError(req *http.Request, err error) <span class="cov8" title="1">{
+        requestDuration := getRequestDuration(req.Context()) / time.Millisecond
+        method := req.Method
+        url := req.URL.String()
+        fmt.Fprintf(rl.errOut, "%s %s %s [%dms] ERROR: %v\n", time.Now().Format("02/Jan/2006 03:04:05"), method, url, requestDuration, err)
+}</span>
+
+func getRequestDuration(ctx context.Context) time.Duration <span class="cov8" title="1">{
+        now := time.Now()
+        start := ctx.Value(reqTime)
+        if start == nil </span><span class="cov8" title="1">{
+                return 0
+        }</span>
+        <span class="cov8" title="1">startTime, ok := start.(time.Time)
+        if !ok </span><span class="cov8" title="1">{
+                return 0
+        }</span>
+        <span class="cov8" title="1">return now.Sub(startTime)</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package http
+
+import "time"
+
+// Retriable defines contract for retriers to implement
+type Retriable interface {
+        NextInterval(retry int) time.Duration
+}
+
+// RetriableFunc is an adapter to allow the use of ordinary functions
+// as a Retriable
+type RetriableFunc func(retry int) time.Duration
+
+// NextInterval calls f(retry)
+func (f RetriableFunc) NextInterval(retry int) time.Duration <span class="cov8" title="1">{
+        return f(retry)
+}</span>
+
+type retrier struct {
+        backoff Backoff
+}
+
+// NewRetrier returns retrier with some backoff strategy
+func NewRetrier(backoff Backoff) Retriable <span class="cov8" title="1">{
+        return &amp;retrier{
+                backoff: backoff,
+        }
+}</span>
+
+// NewRetrierFunc returns a retrier with a retry function defined
+func NewRetrierFunc(f RetriableFunc) Retriable <span class="cov8" title="1">{
+        return f
+}</span>
+
+// NextInterval returns next retriable time
+func (r *retrier) NextInterval(retry int) time.Duration <span class="cov8" title="1">{
+        return r.backoff.Next(retry)
+}</span>
+
+type noRetrier struct {
+}
+
+// NewNoRetrier returns a null object for retriable
+func NewNoRetrier() Retriable <span class="cov8" title="1">{
+        return &amp;noRetrier{}
+}</span>
+
+// NextInterval returns next retriable time, always 0
+func (r *noRetrier) NextInterval(retry int) time.Duration <span class="cov8" title="1">{
+        return 0 * time.Millisecond
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package http
+
+import (
+        "bytes"
+        "encoding/json"
+)
+
+const EMPTY_STRING = ""
+
+func ToJson(data interface{}) (string, error) <span class="cov8" title="1">{
+        jsonData, err := json.Marshal(data)
+        if err != nil </span><span class="cov8" title="1">{
+                return EMPTY_STRING, err
+        }</span>
+        <span class="cov8" title="1">return string(jsonData), nil</span>
+}
+
+func ToReader(bodyString string) *bytes.Reader <span class="cov8" title="1">{
+        return bytes.NewReader([]byte(bodyString))
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
