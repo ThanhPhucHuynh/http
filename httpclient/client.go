@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	avhttp "github.com/ThanhPhucHuynh/http"
 	"github.com/gojek/valkyrie"
 	"github.com/pkg/errors"
+	avhttp "github.com/thanhphuchuynh/http"
 )
 
 // Client is the http client implementation

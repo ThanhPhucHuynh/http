@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	avhttp "github.com/ThanhPhucHuynh/http"
-	"github.com/ThanhPhucHuynh/http/httpclient"
+	avhttp "github.com/thanhphuchuynh/http"
+	"github.com/thanhphuchuynh/http/httpclient"
 
 	"github.com/afex/hystrix-go/hystrix"
 	metricCollector "github.com/afex/hystrix-go/hystrix/metric_collector"

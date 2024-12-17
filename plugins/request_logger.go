@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	avhttp "github.com/ThanhPhucHuynh/http"
+	avhttp "github.com/thanhphuchuynh/http"
 )
 
 type ctxKey string

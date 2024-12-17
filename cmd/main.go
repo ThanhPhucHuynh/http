@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ThanhPhucHuynh/http/hystrix"
+	"github.com/thanhphuchuynh/http/hystrix"
 )
 
 type linearBackoff struct {

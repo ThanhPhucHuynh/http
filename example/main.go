@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	avhttp "github.com/ThanhPhucHuynh/http"
-	"github.com/ThanhPhucHuynh/http/httpclient"
-	"github.com/ThanhPhucHuynh/http/hystrix"
+	avhttp "github.com/thanhphuchuynh/http"
+	"github.com/thanhphuchuynh/http/httpclient"
+	"github.com/thanhphuchuynh/http/hystrix"
 
 	"github.com/pkg/errors"
 )

@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	avhttp "github.com/ThanhPhucHuynh/http"
-	"github.com/ThanhPhucHuynh/http/plugins"
 	hystrixplugins "github.com/afex/hystrix-go/plugins"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	avhttp "github.com/thanhphuchuynh/http"
+	"github.com/thanhphuchuynh/http/plugins"
 )
 
 type myHTTPClient struct {

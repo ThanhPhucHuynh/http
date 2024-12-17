@@ -3,9 +3,9 @@ package hystrix
 import (
 	"time"
 
-	avhttp "github.com/ThanhPhucHuynh/http"
-	"github.com/ThanhPhucHuynh/http/httpclient"
 	"github.com/afex/hystrix-go/plugins"
+	avhttp "github.com/thanhphuchuynh/http"
+	"github.com/thanhphuchuynh/http/httpclient"
 )
 
 // Option represents the hystrix client options

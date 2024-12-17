@@ -3,7 +3,7 @@ package httpclient
 import (
 	"time"
 
-	avhttp "github.com/ThanhPhucHuynh/http"
+	avhttp "github.com/thanhphuchuynh/http"
 )
 
 // Option represents the client options

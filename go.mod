@@ -1,4 +1,4 @@
-module github.com/ThanhPhucHuynh/http
+module github.com/thanhphuchuynh/http
 
 go 1.20
 
